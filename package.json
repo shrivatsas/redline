@@ -22,6 +22,7 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc -b",
     "preview": "vite preview",
+    "prepare": "npm run build",
     "redline": "pnpm build; node dist/cli/index.js",
     "release": "pnpm build && pnpm publish --access public --no-git-checks"
   },
@@ -35,6 +36,7 @@
     "@tailwindcss/vite": "^4.2.1",
     "@tiptap/core": "^3.22.3",
     "@tiptap/extension-bubble-menu": "^3.22.3",
+    "@tiptap/extension-code-block": "^3.22.3",
     "@tiptap/pm": "^3.22.3",
     "@tiptap/react": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",
@@ -45,6 +47,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",
+    "mermaid": "^11.15.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.4",
     "react-day-picker": "^9.14.0",
