@@ -28,7 +28,11 @@ export function useDraftComment({
     const { from, to } = editor.state.selection
     if (from === to) return
     const draftId = `draft-${crypto.randomUUID()}`
-    editor.chain().focus().setCommentMark(draftId).run()
+    // The bubble menu prevents its mousedown from stealing the editor
+    // selection, so refocusing here is unnecessary. Tiptap's focus command
+    // schedules a scrollIntoView that can race with the draft textarea focus
+    // and jump long documents back to the editor's top in some browsers.
+    editor.chain().setCommentMark(draftId).run()
     setPendingDraftCommentId(draftId)
     setDraftQuotedText(editor.state.doc.textBetween(from, to, " "))
     setShowNewComment(true)
