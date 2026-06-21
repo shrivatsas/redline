@@ -1761,6 +1761,50 @@
   font-weight: inherit;
 }
 
+.tiptap table {
+  width: 100%;
+  margin-block: 1.7em;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+  font-size: 0.95em;
+}
+
+.tiptap :where(th, td) {
+  border: 1px solid var(--border);
+  padding: 0.5em 0.75em;
+  vertical-align: top;
+  text-align: left;
+}
+
+.tiptap th {
+  background-color: oklch(0 0 0 / 0.04);
+  font-weight: 600;
+  color: var(--paper-foreground);
+}
+
+/* Block margins collapse inside cells so single-line rows stay compact. */
+.tiptap :where(th, td) > :where(p):first-child {
+  margin-top: 0;
+}
+
+.tiptap :where(th, td) > :where(p):last-child {
+  margin-bottom: 0;
+}
+
+/* ProseMirror cell selection while editing. */
+.tiptap .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklch, var(--paper-link) 12%, transparent);
+  pointer-events: none;
+}
+
+.tiptap :where(th, td) {
+  position: relative;
+}
+
 /* Mermaid fences retain editable source while adding a rendered preview. */
 .tiptap .mermaid-code-block {
   margin-block: 1.7em;

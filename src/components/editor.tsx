@@ -3,6 +3,7 @@ import { Plus } from "lucide-react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import { BubbleMenu } from "@tiptap/react/menus"
 import StarterKit from "@tiptap/starter-kit"
+import { TableKit } from "@tiptap/extension-table"
 import { Markdown } from "tiptap-markdown"
 import type { Editor as TiptapEditor } from "@tiptap/core"
 import { Button } from "@/components/ui/button"
@@ -42,6 +43,7 @@ export function Editor({
     () => [
       StarterKit.configure({ codeBlock: false }),
       MermaidCodeBlock,
+      TableKit.configure({ table: { resizable: false } }),
       Markdown.configure({
         html: false,
         transformPastedText: true,
