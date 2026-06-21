@@ -16,9 +16,10 @@ export function startServer(filePath: string, port: number): Promise<string> {
   const clientDirRaw = join(__dirname, "../client")
   const clientDirResolved = resolve(clientDirRaw)
   const useClientDir = existsSync(clientDirResolved)
+  let activePort = port
 
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    const url = new URL(req.url!, `http://localhost:${port}`)
+    const url = new URL(req.url!, `http://localhost:${activePort}`)
 
     // API: file metadata (mtime/size/rev)
     if (url.pathname === "/api/file/meta" && req.method === "GET") {
@@ -147,9 +148,29 @@ export function startServer(filePath: string, port: number): Promise<string> {
     res.end("Not found")
   })
 
-  return new Promise((resolveListen) => {
-    server.listen(port, () => {
-      resolveListen(`http://localhost:${port}`)
-    })
+  return new Promise((resolveListen, rejectListen) => {
+    const listenOnPort = (candidatePort: number) => {
+      const onError = (err: NodeJS.ErrnoException) => {
+        if (err.code === "EADDRINUSE") {
+          server.off("listening", onListening)
+          listenOnPort(candidatePort + 1)
+          return
+        }
+
+        rejectListen(err)
+      }
+
+      const onListening = () => {
+        server.off("error", onError)
+        activePort = candidatePort
+        resolveListen(`http://localhost:${candidatePort}`)
+      }
+
+      server.once("error", onError)
+      server.once("listening", onListening)
+      server.listen(candidatePort)
+    }
+
+    listenOnPort(port)
   })
 }

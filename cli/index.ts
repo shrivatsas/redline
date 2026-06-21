@@ -22,8 +22,8 @@ if (!filePath.endsWith(".md")) {
   process.exit(1)
 }
 
-const port = 4700
-const url = await startServer(filePath, port)
+const startingPort = 4700
+const url = await startServer(filePath, startingPort)
 
 console.log(`\n  redline`)
 console.log(`  Serving ${args[0]} at ${url}\n`)

@@ -251,7 +251,7 @@ export function App() {
           <code className="bg-muted rounded px-1 py-0.5 font-mono text-[11px]">
             node dist/cli/index.js ./file.md
           </code>{" "}
-          and open the URL it prints (port 4700).
+          and open the URL it prints.
         </p>
       </div>
     )
