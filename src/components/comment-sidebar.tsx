@@ -78,12 +78,6 @@ export function CommentSidebar({ editor }: { editor: TiptapEditor | null }) {
     draftWrapperRef,
   })
 
-  useEffect(() => {
-    if (!activeCommentId) return
-    const el = itemRefs.current[activeCommentId]
-    el?.scrollIntoView({ block: "nearest", behavior: "smooth" })
-  }, [activeCommentId])
-
   // When the draft appears, suppress wrapper Y transition for the first paint so
   // the wrapper snaps to the anchored position. After that, re-enable the
   // transition so subsequent layout shifts (other comments moving) animate.
