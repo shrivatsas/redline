@@ -1761,6 +1761,76 @@
   font-weight: inherit;
 }
 
+/* Mermaid fences retain editable source while adding a rendered preview. */
+.tiptap .mermaid-code-block {
+  margin-block: 1.7em;
+  overflow: hidden;
+  border: 1px solid oklch(0 0 0 / 0.1);
+  border-radius: var(--radius-lg);
+  background: oklch(1 0 0 / 0.45);
+}
+
+.tiptap .mermaid-preview {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  overflow-x: auto;
+  padding: 1.25rem;
+}
+
+.tiptap .mermaid-preview__diagram {
+  width: 100%;
+}
+
+.tiptap .mermaid-preview__diagram svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.tiptap .mermaid-preview__empty,
+.tiptap .mermaid-preview__error {
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
+  color: var(--muted-foreground);
+}
+
+.tiptap .mermaid-preview__error {
+  display: grid;
+  width: 100%;
+  gap: 0.35rem;
+  color: var(--destructive);
+}
+
+.tiptap .mermaid-preview__error span {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.tiptap .mermaid-source-label {
+  border-top: 1px solid oklch(0 0 0 / 0.08);
+  background: oklch(0 0 0 / 0.025);
+  padding: 0.45rem 0.8rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+.tiptap pre.mermaid-source {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: oklch(0 0 0 / 0.025);
+  padding-top: 0.65rem;
+}
+
 .tiptap thead th {
   background-color: oklch(0 0 0 / 0.04);
   color: var(--paper-foreground);

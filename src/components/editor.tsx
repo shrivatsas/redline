@@ -8,6 +8,7 @@ import type { Editor as TiptapEditor } from "@tiptap/core"
 import { Button } from "@/components/ui/button"
 import { CommentMark } from "@/extensions/comment-mark"
 import { CommentShortcuts } from "@/extensions/comment-shortcuts"
+import { MermaidCodeBlock } from "@/extensions/mermaid-code-block"
 import { cn } from "@/lib/utils"
 
 interface EditorProps {
@@ -39,7 +40,8 @@ export function Editor({
 
   const extensions = useMemo(
     () => [
-      StarterKit,
+      StarterKit.configure({ codeBlock: false }),
+      MermaidCodeBlock,
       Markdown.configure({
         html: false,
         transformPastedText: true,
