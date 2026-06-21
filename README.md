@@ -16,7 +16,7 @@ Inspired by [Agentation](https://agentation.dev).
 npx @btn0s/redline ./plan.md
 ```
 
-Redline starts a local server on port `4700` and opens the review UI in your browser.
+Redline starts a local server on port `4700` and falls back to the next available port if needed, then opens the review UI in your browser.
 
 ## Install
 

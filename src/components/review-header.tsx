@@ -1,12 +1,5 @@
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-
-export const REDLINE_REPO_URL = "https://github.com/btn0s/redline"
-export const BTN0S_TWITTER_URL = "https://twitter.com/btn0s"
-
-const linkClass =
-  "font-mono text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
 
 interface ReviewHeaderProps {
   isOutdated: boolean
@@ -26,32 +19,7 @@ export function ReviewHeader({
       data-prevent-redlines-dismiss=""
     >
       <div className="flex h-9 min-h-9 items-center justify-between gap-3 px-4 text-xs leading-none">
-        <a
-          href={REDLINE_REPO_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn("min-w-0 shrink", linkClass)}
-        >
-          @btn0s/redline
-        </a>
-
         <div className="flex min-w-0 items-center gap-3">
-          <a
-            href={BTN0S_TWITTER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={linkClass}
-          >
-            Twitter
-          </a>
-          <a
-            href={REDLINE_REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={linkClass}
-          >
-            GitHub
-          </a>
           {isOutdated ? (
             <Button
               type="button"

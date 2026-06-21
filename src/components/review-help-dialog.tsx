@@ -20,7 +20,6 @@ import {
   dialogHeaderBlock,
   dialogInlineKbdChip,
   dialogLead,
-  dialogMonoLink,
   dialogSection,
   dialogSectionLast,
   dialogSectionTitle,
@@ -28,9 +27,6 @@ import {
   dialogShortcutList,
   dialogShortcutRow,
 } from "@/components/review-dialog-styles"
-import { BTN0S_TWITTER_URL, REDLINE_REPO_URL } from "@/components/review-header"
-
-const CURSOR_URL = "https://cursor.com"
 
 interface ReviewHelpDialogProps {
   open: boolean
@@ -76,16 +72,6 @@ export function ReviewHelpDialog({
                   .md
                 </Kbd>
                 , then copy everything back to the LLM in one shot.
-              </p>
-              <p>
-                <a
-                  href={REDLINE_REPO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(dialogMonoLink, "inline-block max-w-full break-all")}
-                >
-                  {REDLINE_REPO_URL}
-                </a>
               </p>
             </div>
           </DialogHeader>
@@ -162,30 +148,7 @@ export function ReviewHelpDialog({
 
         <div className={dialogSectionLast}>
           <p className={cn(dialogBody, "text-center")}>
-            <span className="font-sans">Handcrafted by </span>
-            <a
-              href={BTN0S_TWITTER_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                dialogMonoLink,
-                "font-semibold text-foreground/90 hover:text-foreground",
-              )}
-            >
-              btn0s
-            </a>
-            <span className="font-sans"> and </span>
-            <a
-              href={CURSOR_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                dialogMonoLink,
-                "font-semibold text-foreground/90 hover:text-foreground",
-              )}
-            >
-              Cursor
-            </a>
+            <span className="font-sans">Built for markdown review workflows.</span>
           </p>
         </div>
       </DialogContent>
