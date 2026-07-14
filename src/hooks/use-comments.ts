@@ -8,6 +8,11 @@ import {
   removeAllCommentMarksFromEditor,
   removeCommentMarkFromEditor,
 } from "@/lib/editor-utils"
+import {
+  normalizeQuotedText,
+  resolveCommentRange,
+  resolveCommentRangeNearAnchor,
+} from "@/lib/comment-anchoring"
 
 export type { Comment, CommentMessage } from "@/types/comment"
 
@@ -277,6 +282,63 @@ export function useComments(persistenceKey: string | null) {
     })
   }, [])
 
+  const reanchorComments = useCallback((editor: Editor) => {
+    const commentMarkType = editor.state.schema.marks.commentMark
+    if (!commentMarkType) return { attached: 0, needsAttention: 0 }
+
+    let tr = editor.state.tr
+    let changed = false
+    let attached = 0
+    let needsAttention = 0
+
+    const nextComments = comments.map((comment) => {
+        const anchoredRange = resolveCommentRange(editor, comment)
+        const anchoredText = anchoredRange
+          ? normalizeQuotedText(
+              editor.state.doc.textBetween(
+                anchoredRange.from,
+                anchoredRange.to,
+                " ",
+              ),
+            )
+          : ""
+        const quote = normalizeQuotedText(comment.quotedText)
+        const range =
+          anchoredRange && anchoredText === quote
+            ? anchoredRange
+            : resolveCommentRangeNearAnchor(editor, comment)
+
+        if (!range) {
+          needsAttention += 1
+          return comment.anchorStatus === "needs-attention"
+            ? comment
+            : { ...comment, anchorStatus: "needs-attention" }
+        }
+
+        tr = tr.addMark(
+          range.from,
+          range.to,
+          commentMarkType.create({ commentId: comment.id }),
+        )
+        changed = true
+        attached += 1
+        return {
+          ...comment,
+          anchorFrom: range.from,
+          anchorTo: range.to,
+          anchorStatus: "attached",
+        }
+      })
+
+    setComments(nextComments)
+
+    if (changed) {
+      tr.setMeta("addToHistory", false)
+      editor.view.dispatch(tr)
+    }
+    return { attached, needsAttention }
+  }, [comments])
+
   const submitReview = useCallback(
     async (summary: string): Promise<boolean> => {
       const text = formatReview(summary)
@@ -308,6 +370,7 @@ export function useComments(persistenceKey: string | null) {
     addReplyToComment,
     editCommentMessage,
     syncCommentAnchorsFromEditor,
+    reanchorComments,
     deleteComment,
     deleteCommentMessage,
     submitReview,

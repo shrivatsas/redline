@@ -12,6 +12,7 @@ import { ClearCommentsDialog } from "@/components/clear-comments-dialog"
 import { OutdatedReloadDialog } from "@/components/outdated-reload-dialog"
 import { ReviewHeader } from "@/components/review-header"
 import { Spinner } from "@/components/ui/spinner"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import {
   isModKey,
@@ -335,16 +336,32 @@ function AppShell({
     handleAddCommentClick,
     clearAllComments,
     clearHover,
+    reanchorComments,
   } = useCommentContext()
 
   const [clearCommentsOpen, setClearCommentsOpen] = useState(false)
+
+  const handleContentReloaded = useCallback(
+    (reloadedEditor: TiptapEditor) => {
+      const { attached, needsAttention } = reanchorComments(reloadedEditor)
+      const summary = [
+        `${attached} ${attached === 1 ? "comment" : "comments"} reattached`,
+        needsAttention > 0
+          ? `${needsAttention} need${needsAttention === 1 ? "s" : ""} attention`
+          : null,
+      ]
+        .filter((item): item is string => item !== null)
+        .join("; ")
+      toast.success(`Source refreshed: ${summary}`)
+    },
+    [reanchorComments],
+  )
 
   const confirmOutdatedReload = useCallback(async () => {
     setOutdatedReloadPending(true)
     try {
       await reloadFromDisk()
       if (showNewComment || pendingDraftCommentId) handleCloseNewComment()
-      clearAllComments()
       clearHover()
       setOutdatedReloadOpen(false)
     } catch (e) {
@@ -356,7 +373,6 @@ function AppShell({
     showNewComment,
     pendingDraftCommentId,
     handleCloseNewComment,
-    clearAllComments,
     reloadFromDisk,
     clearHover,
     setOutdatedReloadOpen,
@@ -422,6 +438,7 @@ function AppShell({
                       onEditorReady={setEditor}
                       bubbleMenuSuppressed={showNewComment || activeCommentId !== null}
                       onAddComment={handleAddCommentClick}
+                      onContentReloaded={handleContentReloaded}
                     />
                   </div>
                 </div>

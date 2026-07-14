@@ -35,14 +35,14 @@ export function OutdatedReloadDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader className="gap-2 sm:place-items-start sm:text-left">
-          <AlertDialogTitle>Reload from disk?</AlertDialogTitle>
+          <AlertDialogTitle>Refresh source?</AlertDialogTitle>
           <AlertDialogDescription className="space-y-2 text-balance text-left">
             {dirty ? (
               <span className="block">Your unsaved edits will be discarded.</span>
             ) : null}
             <span className="block">
-              All comments will be cleared. Anchors and quotes may no longer match
-              the file after it changes on disk.
+              Comments on unchanged or uniquely matched text will be retained.
+              Other threads will be kept and marked as needing attention.
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -60,10 +60,10 @@ export function OutdatedReloadDialog({
                   className="mr-1.5 size-3.5 shrink-0 animate-spin"
                   aria-hidden
                 />
-                Reloading…
+                Refreshing…
               </>
             ) : (
-              "Reload from disk"
+              "Refresh source"
             )}
           </Button>
         </AlertDialogFooter>
