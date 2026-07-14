@@ -1,7 +1,7 @@
 import { resolve } from "path"
 import { existsSync } from "fs"
 import { execFileSync } from "child_process"
-import { startServer } from "./server.js"
+import { registerWithRunningServer, startServer } from "./server.js"
 
 const args = process.argv.slice(2)
 
@@ -22,11 +22,12 @@ if (!filePath.endsWith(".md")) {
   process.exit(1)
 }
 
-const startingPort = 4700
-const url = await startServer(filePath, startingPort)
+const existingUrl = await registerWithRunningServer(filePath)
+const startedServer = existingUrl ? null : await startServer(filePath, 4700)
+const url = existingUrl ?? startedServer!.url
 
 console.log(`\n  redline`)
-console.log(`  Serving ${args[0]} at ${url}\n`)
+console.log(`  Serving ${args[0]} at ${url}${existingUrl ? " (existing server)" : ""}\n`)
 
 // Open browser (macOS)
 try {
@@ -35,8 +36,19 @@ try {
   console.log(`  Open ${url} in your browser`)
 }
 
-// Keep alive until Ctrl+C
-process.on("SIGINT", () => {
-  console.log("\n  Goodbye.\n")
-  process.exit(0)
-})
+// Only the process that started the server needs to remain alive.
+if (startedServer) {
+  const stopServer = () => {
+    startedServer.close()
+  }
+  process.on("SIGINT", () => {
+    stopServer()
+    console.log("\n  Goodbye.\n")
+    process.exit(0)
+  })
+  process.on("SIGTERM", () => {
+    stopServer()
+    process.exit(0)
+  })
+  process.on("exit", stopServer)
+}

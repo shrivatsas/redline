@@ -16,7 +16,7 @@ Inspired by [Agentation](https://agentation.dev).
 npx @btn0s/redline ./plan.md
 ```
 
-Redline starts a local server on port `4700` and falls back to the next available port if needed, then opens the review UI in your browser.
+Redline starts one local server on port `4700` (falling back to the next available port if needed), then opens the review UI in your browser. Subsequent `redline <file>.md` commands reuse that server and open each document in its own browser tab. The shared server stays up until you stop the first Redline command.
 
 ## Install
 

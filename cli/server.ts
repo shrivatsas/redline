@@ -1,6 +1,8 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "http"
-import { readFileSync, writeFileSync, existsSync, statSync } from "fs"
+import { randomUUID } from "crypto"
+import { readFileSync, writeFileSync, existsSync, statSync, unlinkSync } from "fs"
 import { join, dirname, basename, resolve } from "path"
+import { tmpdir } from "os"
 import { fileURLToPath } from "url"
 import {
   computeRevFromStats,
@@ -11,20 +13,138 @@ import {
 } from "../shared/api-handlers.js"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const registryPath = join(tmpdir(), "redline-server.json")
 
-export function startServer(filePath: string, port: number): Promise<string> {
+interface ServerRegistry {
+  port: number
+  token: string
+}
+
+interface ReviewSession {
+  filePath: string
+}
+
+export interface StartedServer {
+  url: string
+  close: () => void
+}
+
+function reviewUrl(port: number, reviewId: string): string {
+  return `http://localhost:${port}/reviews/${reviewId}`
+}
+
+function createReview(sessions: Map<string, ReviewSession>, filePath: string): string {
+  const reviewId = randomUUID()
+  sessions.set(reviewId, { filePath })
+  return reviewId
+}
+
+function readRegistry(): ServerRegistry | null {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(registryPath, "utf-8"))
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof (parsed as ServerRegistry).port !== "number" ||
+      typeof (parsed as ServerRegistry).token !== "string"
+    ) {
+      return null
+    }
+    return parsed as ServerRegistry
+  } catch {
+    return null
+  }
+}
+
+function removeRegistry(expectedToken?: string) {
+  try {
+    if (expectedToken && readRegistry()?.token !== expectedToken) return
+    unlinkSync(registryPath)
+  } catch {
+    // The registry may already have been removed by a prior shutdown.
+  }
+}
+
+/** Registers a review with the existing local Redline server, if one is live. */
+export async function registerWithRunningServer(filePath: string): Promise<string | null> {
+  const registry = readRegistry()
+  if (!registry) return null
+
+  try {
+    const response = await fetch(`http://localhost:${registry.port}/api/reviews`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Redline-Control": registry.token,
+      },
+      body: JSON.stringify({ filePath }),
+      signal: AbortSignal.timeout(500),
+    })
+    if (!response.ok) throw new Error("Could not register review")
+    const data: unknown = await response.json()
+    if (!data || typeof data !== "object" || typeof (data as { url?: unknown }).url !== "string") {
+      throw new Error("Invalid response from Redline server")
+    }
+    return (data as { url: string }).url
+  } catch {
+    removeRegistry(registry.token)
+    return null
+  }
+}
+
+export function startServer(filePath: string, port: number): Promise<StartedServer> {
   const clientDirRaw = join(__dirname, "../client")
   const clientDirResolved = resolve(clientDirRaw)
   const useClientDir = existsSync(clientDirResolved)
   let activePort = port
+  const controlToken = randomUUID()
+  const sessions = new Map<string, ReviewSession>()
 
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url!, `http://localhost:${activePort}`)
 
-    // API: file metadata (mtime/size/rev)
-    if (url.pathname === "/api/file/meta" && req.method === "GET") {
+    if (url.pathname === "/api/server" && req.method === "GET") {
+      res.writeHead(200, { "Content-Type": "application/json" })
+      res.end(JSON.stringify({ service: "redline" }))
+      return
+    }
+
+    if (url.pathname === "/api/reviews" && req.method === "POST") {
+      if (req.headers["x-redline-control"] !== controlToken) {
+        res.writeHead(403)
+        res.end("Forbidden")
+        return
+      }
+      let body = ""
+      for await (const chunk of req) body += chunk
       try {
-        const st = statSync(filePath)
+        const parsed: unknown = JSON.parse(body)
+        if (!parsed || typeof parsed !== "object" || typeof (parsed as { filePath?: unknown }).filePath !== "string") {
+          throw new Error("Invalid request")
+        }
+        const reviewId = createReview(sessions, (parsed as { filePath: string }).filePath)
+        res.writeHead(201, { "Content-Type": "application/json" })
+        res.end(JSON.stringify({ url: reviewUrl(activePort, reviewId) }))
+      } catch {
+        res.writeHead(400)
+        res.end("Invalid request")
+      }
+      return
+    }
+
+    const reviewRoute = url.pathname.match(/^\/api\/reviews\/([^/]+)\/file(?:\/(meta))?$/)
+    const session = reviewRoute ? sessions.get(reviewRoute[1]!) : undefined
+
+    if (reviewRoute && !session) {
+      res.writeHead(404)
+      res.end("Review not found")
+      return
+    }
+
+    // API: file metadata (mtime/size/rev)
+    if (reviewRoute?.[2] === "meta" && req.method === "GET") {
+      try {
+        const st = statSync(session!.filePath)
         const rev = computeRevFromStats(st)
         res.writeHead(200, {
           "Content-Type": "application/json",
@@ -52,21 +172,21 @@ export function startServer(filePath: string, port: number): Promise<string> {
     }
 
     // API: read file
-    if (url.pathname === "/api/file" && req.method === "GET") {
-      const content = readFileSync(filePath, "utf-8")
+    if (reviewRoute && !reviewRoute[2] && req.method === "GET") {
+      const content = readFileSync(session!.filePath, "utf-8")
       res.writeHead(200, {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
       })
-      const filename = basename(filePath)
-      const displayPath = getDisplayPath(filePath)
-      const root = getRootLabel(filePath)
+      const filename = basename(session!.filePath)
+      const displayPath = getDisplayPath(session!.filePath)
+      const root = getRootLabel(session!.filePath)
       res.end(JSON.stringify({ content, filename, path: displayPath, root }))
       return
     }
 
     // API: write file
-    if (url.pathname === "/api/file" && req.method === "PUT") {
+    if (reviewRoute && !reviewRoute[2] && req.method === "PUT") {
       let body = ""
       for await (const chunk of req) body += chunk
       const parsed = parseFilePutBody(body)
@@ -78,7 +198,7 @@ export function startServer(filePath: string, port: number): Promise<string> {
         res.end(JSON.stringify({ error: parsed.error }))
         return
       }
-      writeFileSync(filePath, parsed.content, "utf-8")
+      writeFileSync(session!.filePath, parsed.content, "utf-8")
       res.writeHead(200, {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
@@ -163,7 +283,19 @@ export function startServer(filePath: string, port: number): Promise<string> {
       const onListening = () => {
         server.off("error", onError)
         activePort = candidatePort
-        resolveListen(`http://localhost:${candidatePort}`)
+        const reviewId = createReview(sessions, filePath)
+        writeFileSync(
+          registryPath,
+          JSON.stringify({ port: candidatePort, token: controlToken }),
+          { mode: 0o600 },
+        )
+        resolveListen({
+          url: reviewUrl(candidatePort, reviewId),
+          close: () => {
+            removeRegistry(controlToken)
+            server.close()
+          },
+        })
       }
 
       server.once("error", onError)
