@@ -31,8 +31,13 @@ function parseFileMeta(data: unknown): FileMeta | null {
   return { mtimeMs: o.mtimeMs, size: o.size, rev: o.rev }
 }
 
-async function fetchFileMeta(): Promise<FileMeta | null> {
-  const res = await fetch("/api/file/meta")
+function getFileApiPath(): string {
+  const reviewId = window.location.pathname.match(/^\/reviews\/([^/]+)/)?.[1]
+  return reviewId ? `/api/reviews/${reviewId}/file` : "/api/file"
+}
+
+async function fetchFileMeta(fileApiPath: string): Promise<FileMeta | null> {
+  const res = await fetch(`${fileApiPath}/meta`)
   if (!res.ok) return null
   const text = await res.text()
   let data: unknown
@@ -45,6 +50,7 @@ async function fetchFileMeta(): Promise<FileMeta | null> {
 }
 
 export function useFile() {
+  const fileApiPath = getFileApiPath()
   const [file, setFile] = useState<FileData | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -70,7 +76,7 @@ export function useFile() {
 
   useEffect(() => {
     setLoadError(null)
-    void fetch("/api/file")
+    void fetch(fileApiPath)
       .then(async (r) => {
         const text = await r.text()
         let data: unknown
@@ -101,7 +107,7 @@ export function useFile() {
       })
       .then(async (loaded) => {
         setFile(loaded)
-        const meta = await fetchFileMeta()
+        const meta = await fetchFileMeta(fileApiPath)
         if (meta) {
           setBaseMeta(meta)
           setLatestMeta(meta)
@@ -113,14 +119,14 @@ export function useFile() {
     return () => {
       clearTimeout(timeoutRef.current)
     }
-  }, [])
+  }, [fileApiPath])
 
   useEffect(() => {
     if (loadError || !file) return
 
     const poll = async () => {
       try {
-        const meta = await fetchFileMeta()
+        const meta = await fetchFileMeta(fileApiPath)
         if (meta) setLatestMeta(meta)
       } catch {
         // ignore network errors during poll
@@ -130,14 +136,14 @@ export function useFile() {
     void poll()
     const id = window.setInterval(poll, 2000)
     return () => window.clearInterval(id)
-  }, [loadError, file])
+  }, [loadError, file, fileApiPath])
 
   const save = useCallback((content: string) => {
     clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(async () => {
       setSaving(true)
       try {
-        const res = await fetch("/api/file", {
+        const res = await fetch(fileApiPath, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
@@ -145,7 +151,7 @@ export function useFile() {
         if (res.ok) {
           setFile((f) => (f ? { ...f, content } : f))
           setWorkingMarkdown(content)
-          const meta = await fetchFileMeta()
+          const meta = await fetchFileMeta(fileApiPath)
           if (meta) {
             setBaseMeta(meta)
             setLatestMeta(meta)
@@ -155,10 +161,10 @@ export function useFile() {
         setSaving(false)
       }
     }, 500)
-  }, [])
+  }, [fileApiPath])
 
   const reloadFromDisk = useCallback(async () => {
-    const res = await fetch("/api/file")
+    const res = await fetch(fileApiPath)
     const text = await res.text()
     let data: unknown
     try {
@@ -175,7 +181,7 @@ export function useFile() {
     }
     setFile(data as FileData)
     try {
-      const meta = await fetchFileMeta()
+      const meta = await fetchFileMeta(fileApiPath)
       if (meta) {
         setBaseMeta(meta)
         setLatestMeta(meta)
@@ -184,7 +190,7 @@ export function useFile() {
       // ignore meta fetch errors; file content still reloaded above
     }
     setContentReloadNonce((n) => n + 1)
-  }, [])
+  }, [fileApiPath])
 
   const dirty =
     file !== null &&
