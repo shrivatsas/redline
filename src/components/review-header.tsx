@@ -27,9 +27,9 @@ export function ReviewHeader({
               size="sm"
               className="h-5 shrink-0 rounded-full px-2 py-0 text-xs font-medium"
               onClick={onOutdatedClick}
-              title="File changed on disk — reload clears comments and loads latest"
+              title="File changed on disk — refresh the source and preserve comments where possible"
             >
-              Outdated · Reload
+              Outdated · Refresh source
             </Button>
           ) : null}
           {saving && (

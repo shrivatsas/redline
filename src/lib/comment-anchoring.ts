@@ -150,15 +150,7 @@ export function resolveCommentRangeNearAnchor(
   const { normalized, normStartRaw, normEndRaw } = mapNormalizedIndicesToRaw(raw)
   if (!normalized || normalized.length !== normStartRaw.length) return null
 
-  const anchorCharGuess = Math.max(
-    0,
-    Math.min(
-      raw.length - 1,
-      docPosForCharIndex.findIndex((p) => p >= comment.anchorFrom),
-    ),
-  )
-
-  let best: { from: number; to: number; dist: number } | null = null
+  let match: { from: number; to: number } | null = null
   let searchAt = 0
   while (searchAt <= normalized.length - normalizedQuote.length) {
     const idx = normalized.indexOf(normalizedQuote, searchAt)
@@ -170,16 +162,13 @@ export function resolveCommentRangeNearAnchor(
     const to = docPosForCharIndex[endRaw]! + 1
 
     if (to > from) {
-      const centerRaw = (startRaw + endRaw) >> 1
-      const dist = Math.abs(centerRaw - anchorCharGuess)
-      if (!best || dist < best.dist) {
-        best = { from, to, dist }
-      }
+      if (match) return null
+      match = { from, to }
     }
     searchAt = idx + 1
   }
 
-  return best ? { from: best.from, to: best.to } : null
+  return match
 }
 
 /** Legacy path if the optimized builder ever diverges from `textBetween`. */
@@ -204,6 +193,7 @@ function resolveCommentRangeNearAnchorBruteForce(
   const MAX_ITERATIONS = 10_000
   let iterations = 0
 
+  let match: { from: number; to: number } | null = null
   for (let k = 0; k <= maxOffset; k += 1) {
     const offsets = k === 0 ? [0] : [k, -k]
     for (const offset of offsets) {
@@ -223,11 +213,12 @@ function resolveCommentRangeNearAnchorBruteForce(
             editor.state.doc.textBetween(candidateFrom, candidateTo, " "),
           )
           if (candidateText === normalizedQuote) {
-            return { from: candidateFrom, to: candidateTo }
+            if (match) return null
+            match = { from: candidateFrom, to: candidateTo }
           }
         }
       }
     }
   }
-  return null
+  return match
 }

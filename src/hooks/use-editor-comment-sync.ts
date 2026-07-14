@@ -37,7 +37,9 @@ export function useEditorCommentSync({
     })
 
     const missingComments = comments.filter(
-      (comment) => !existingCommentMarkIds.has(comment.id),
+      (comment) =>
+        comment.anchorStatus !== "needs-attention" &&
+        !existingCommentMarkIds.has(comment.id),
     )
     if (missingComments.length === 0) return
 
@@ -55,7 +57,7 @@ export function useEditorCommentSync({
       const range =
         anchoredRange && anchoredText === quote
           ? anchoredRange
-          : resolveCommentRangeNearAnchor(editor, comment) ?? anchoredRange
+          : resolveCommentRangeNearAnchor(editor, comment)
       if (!range) continue
       tr = tr.addMark(
         range.from,

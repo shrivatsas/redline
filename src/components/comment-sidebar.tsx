@@ -458,6 +458,11 @@ const ThreadRow = memo(function ThreadRow({
         >
           {isActive ? (
             <>
+              {comment.anchorStatus === "needs-attention" ? (
+                <p className="mb-2 text-[10px] font-medium leading-snug text-[color:var(--sticky-foreground)]/65">
+                  Needs attention: the referenced text changed or is ambiguous.
+                </p>
+              ) : null}
               <blockquote
                 id={`comment-${comment.id}-quote`}
                 className="text-caption leading-snug text-[color:var(--sticky-foreground)]/70 not-italic line-clamp-2"
@@ -566,6 +571,11 @@ const ThreadRow = memo(function ThreadRow({
             </>
           ) : (
             <>
+              {comment.anchorStatus === "needs-attention" ? (
+                <p className="mb-1.5 text-[10px] font-medium leading-snug text-[color:var(--sticky-foreground)]/65">
+                  Needs attention
+                </p>
+              ) : null}
               <blockquote className="text-caption leading-snug text-[color:var(--sticky-foreground)]/70 not-italic line-clamp-2">
                 {"\u201C"}
                 {comment.quotedText}

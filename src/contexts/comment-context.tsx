@@ -37,6 +37,10 @@ interface CommentContextValue {
   clearAllComments: () => void
   hasComments: boolean
   syncCommentAnchorsFromEditor: (editor: Editor) => void
+  reanchorComments: (editor: Editor) => {
+    attached: number
+    needsAttention: number
+  }
 
   showNewComment: boolean
   setShowNewComment: (show: boolean) => void
@@ -86,6 +90,7 @@ export function CommentProvider({ editor, persistenceKey, children }: CommentPro
     clearAllComments: clearAllCommentsBase,
     hasComments,
     syncCommentAnchorsFromEditor,
+    reanchorComments,
   } = useComments(persistenceKey)
 
   const { summary, setSummary, resetReview } = useReviewState(persistenceKey)
@@ -168,6 +173,7 @@ export function CommentProvider({ editor, persistenceKey, children }: CommentPro
     clearAllComments,
     hasComments,
     syncCommentAnchorsFromEditor,
+    reanchorComments,
     showNewComment,
     setShowNewComment,
     draftQuotedText,
