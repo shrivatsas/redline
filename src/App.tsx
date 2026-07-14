@@ -223,6 +223,10 @@ export function App() {
 
   const commentsPersistenceKey = file ? (file.path ?? file.filename) : null
 
+  useEffect(() => {
+    if (file) document.title = file.filename
+  }, [file])
+
   const handleMarkdownUpdate = useCallback(
     (md: string) => {
       notifyMarkdownChange(md)
