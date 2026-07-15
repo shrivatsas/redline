@@ -291,7 +291,7 @@ export function useComments(persistenceKey: string | null) {
     let attached = 0
     let needsAttention = 0
 
-    const nextComments = comments.map((comment) => {
+    const nextComments = comments.map<Comment>((comment) => {
         const anchoredRange = resolveCommentRange(editor, comment)
         const anchoredText = anchoredRange
           ? normalizeQuotedText(
