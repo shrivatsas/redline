@@ -25,7 +25,6 @@ interface ReviewSession {
 }
 
 export interface StartedServer {
-  url: string
   close: () => void
 }
 
@@ -92,7 +91,28 @@ export async function registerWithRunningServer(filePath: string): Promise<strin
   }
 }
 
-export function startServer(filePath: string, port: number): Promise<StartedServer> {
+/** Stops the existing local Redline server, if one is live. */
+export async function stopRunningServer(): Promise<boolean> {
+  const registry = readRegistry()
+  if (!registry) return false
+
+  try {
+    const response = await fetch(`http://localhost:${registry.port}/api/server/stop`, {
+      method: "POST",
+      headers: { "X-Redline-Control": registry.token },
+      signal: AbortSignal.timeout(500),
+    })
+    if (!response.ok) throw new Error("Could not stop Redline server")
+    removeRegistry(registry.token)
+    return true
+  } catch {
+    removeRegistry(registry.token)
+    return false
+  }
+}
+
+/** Starts the shared local Redline server without registering a review. */
+export function startServer(port: number): Promise<StartedServer> {
   const clientDirRaw = join(__dirname, "../client")
   const clientDirResolved = resolve(clientDirRaw)
   const useClientDir = existsSync(clientDirResolved)
@@ -106,6 +126,18 @@ export function startServer(filePath: string, port: number): Promise<StartedServ
     if (url.pathname === "/api/server" && req.method === "GET") {
       res.writeHead(200, { "Content-Type": "application/json" })
       res.end(JSON.stringify({ service: "redline" }))
+      return
+    }
+
+    if (url.pathname === "/api/server/stop" && req.method === "POST") {
+      if (req.headers["x-redline-control"] !== controlToken) {
+        res.writeHead(403)
+        res.end("Forbidden")
+        return
+      }
+      server.close(() => removeRegistry(controlToken))
+      res.writeHead(202)
+      res.end()
       return
     }
 
@@ -283,14 +315,12 @@ export function startServer(filePath: string, port: number): Promise<StartedServ
       const onListening = () => {
         server.off("error", onError)
         activePort = candidatePort
-        const reviewId = createReview(sessions, filePath)
         writeFileSync(
           registryPath,
           JSON.stringify({ port: candidatePort, token: controlToken }),
           { mode: 0o600 },
         )
         resolveListen({
-          url: reviewUrl(candidatePort, reviewId),
           close: () => {
             removeRegistry(controlToken)
             server.close()
