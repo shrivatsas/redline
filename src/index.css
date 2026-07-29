@@ -1722,6 +1722,13 @@
   margin-bottom: 0.75em;
 }
 
+/* ProseMirror represents each list item as a paragraph. Keep that wrapper
+   from adding a second vertical rhythm on top of the list item's spacing. */
+.tiptap :where(li > p) {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .tiptap li::marker {
   color: var(--muted-foreground);
 }
