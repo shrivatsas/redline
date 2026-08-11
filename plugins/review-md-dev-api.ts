@@ -6,6 +6,7 @@ import {
   getDisplayPath,
   getRootLabel,
   parseFilePutBody,
+  resolveExcalidrawAssetPath,
 } from "../shared/api-handlers.js"
 
 function fileMetaFromStats(st: fs.Stats) {
@@ -28,7 +29,11 @@ export function reviewMdDevApi(fileFromEnv: string): Plugin {
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const pathname = req.url?.split("?")[0] ?? ""
-        if (pathname !== "/api/file" && pathname !== "/api/file/meta") {
+        if (
+          pathname !== "/api/file" &&
+          pathname !== "/api/file/meta" &&
+          pathname !== "/api/file/asset"
+        ) {
           next()
           return
         }
@@ -67,6 +72,30 @@ export function reviewMdDevApi(fileFromEnv: string): Plugin {
                 error: e instanceof Error ? e.message : "Failed to stat file",
               }),
             )
+          }
+          return
+        }
+
+        if (pathname === "/api/file/asset" && req.method === "GET") {
+          const requestUrl = new URL(req.url ?? "", "http://localhost")
+          const assetPath = resolveExcalidrawAssetPath(
+            resolved,
+            requestUrl.searchParams.get("path") ?? "",
+          )
+          if (!assetPath) {
+            res.statusCode = 403
+            res.end("Forbidden")
+            return
+          }
+          try {
+            const st = fs.statSync(assetPath)
+            if (!st.isFile()) throw new Error("Asset is not a file")
+            res.setHeader("Content-Type", "application/json")
+            res.statusCode = 200
+            res.end(fs.readFileSync(assetPath, "utf-8"))
+          } catch {
+            res.statusCode = 404
+            res.end("Excalidraw file not found")
           }
           return
         }

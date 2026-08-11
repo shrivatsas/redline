@@ -1882,6 +1882,41 @@
   padding-top: 0.65rem;
 }
 
+/* Linked Excalidraw scenes stay editable as links and preview inline. */
+.tiptap .excalidraw-preview {
+  display: grid;
+  width: 100%;
+  min-height: 8rem;
+  margin-block: 0.75rem 1.25rem;
+  place-items: center;
+  overflow-x: auto;
+  border: 1px solid oklch(0 0 0 / 0.1);
+  border-radius: var(--radius-lg);
+  background: oklch(1 0 0 / 0.45);
+  padding: 1.25rem;
+}
+
+.tiptap .excalidraw-preview__diagram,
+.tiptap .excalidraw-preview__diagram svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.tiptap .excalidraw-preview__empty,
+.tiptap .excalidraw-preview__error {
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
+  color: var(--muted-foreground);
+}
+
+.tiptap .excalidraw-preview__error {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--destructive);
+}
+
 .tiptap thead th {
   background-color: oklch(0 0 0 / 0.04);
   color: var(--paper-foreground);

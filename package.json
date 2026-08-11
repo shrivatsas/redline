@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
+    "@excalidraw/excalidraw": "^0.18.1",
     "@fontsource-variable/caveat": "^5.2.8",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -37,6 +38,7 @@
     "@tiptap/core": "^3.22.3",
     "@tiptap/extension-bubble-menu": "^3.22.3",
     "@tiptap/extension-code-block": "^3.22.3",
+    "@tiptap/extension-link": "3.22.3",
     "@tiptap/extension-table": "^3.22.3",
     "@tiptap/pm": "^3.22.3",
     "@tiptap/react": "^3.22.3",
