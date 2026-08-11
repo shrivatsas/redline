@@ -1830,6 +1830,7 @@
 }
 
 .tiptap .mermaid-preview__diagram {
+  display: block;
   width: 100%;
 }
 
@@ -1901,6 +1902,37 @@
   display: block;
   width: 100%;
   max-width: 100%;
+  height: auto;
+}
+
+.tiptap .diagram-zoom-trigger {
+  cursor: zoom-in;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.tiptap .diagram-zoom-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+
+.diagram-zoom-dialog {
+  overflow: auto;
+}
+
+.diagram-zoom-dialog__diagram {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+}
+
+.diagram-zoom-dialog__diagram svg {
+  display: block;
+  width: 100%;
+  max-width: none !important;
   height: auto;
 }
 
