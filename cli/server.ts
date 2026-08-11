@@ -10,6 +10,7 @@ import {
   getRootLabel,
   isResolvedPathInsideDirectory,
   parseFilePutBody,
+  resolveExcalidrawAssetPath,
 } from "../shared/api-handlers.js"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -164,7 +165,7 @@ export function startServer(port: number): Promise<StartedServer> {
       return
     }
 
-    const reviewRoute = url.pathname.match(/^\/api\/reviews\/([^/]+)\/file(?:\/(meta))?$/)
+    const reviewRoute = url.pathname.match(/^\/api\/reviews\/([^/]+)\/file(?:\/(meta|asset))?$/)
     const session = reviewRoute ? sessions.get(reviewRoute[1]!) : undefined
 
     if (reviewRoute && !session) {
@@ -199,6 +200,32 @@ export function startServer(port: number): Promise<StartedServer> {
             error: e instanceof Error ? e.message : "Failed to stat file",
           }),
         )
+      }
+      return
+    }
+
+    // API: read an Excalidraw file linked from the reviewed document
+    if (reviewRoute?.[2] === "asset" && req.method === "GET") {
+      const assetPath = resolveExcalidrawAssetPath(
+        session!.filePath,
+        url.searchParams.get("path") ?? "",
+      )
+      if (!assetPath) {
+        res.writeHead(403)
+        res.end("Forbidden")
+        return
+      }
+      try {
+        const st = statSync(assetPath)
+        if (!st.isFile()) throw new Error("Asset is not a file")
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        })
+        res.end(readFileSync(assetPath, "utf-8"))
+      } catch {
+        res.writeHead(404)
+        res.end("Excalidraw file not found")
       }
       return
     }

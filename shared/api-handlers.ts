@@ -98,3 +98,17 @@ export function isResolvedPathInsideDirectory(
   const prefix = root.endsWith(sep) ? root : root + sep
   return candidate.startsWith(prefix)
 }
+
+/** Resolve an Excalidraw link without allowing access outside the document folder. */
+export function resolveExcalidrawAssetPath(
+  markdownFilePath: string,
+  linkedPath: string,
+): string | null {
+  const documentDir = dirname(resolve(markdownFilePath))
+  const assetPath = resolve(documentDir, linkedPath)
+
+  if (!linkedPath.toLowerCase().endsWith(".excalidraw")) return null
+  if (!isResolvedPathInsideDirectory(documentDir, assetPath)) return null
+
+  return assetPath
+}

@@ -9,6 +9,7 @@ import type { Editor as TiptapEditor } from "@tiptap/core"
 import { Button } from "@/components/ui/button"
 import { CommentMark } from "@/extensions/comment-mark"
 import { CommentShortcuts } from "@/extensions/comment-shortcuts"
+import { ExcalidrawLink } from "@/extensions/excalidraw-link"
 import { MermaidCodeBlock } from "@/extensions/mermaid-code-block"
 import { cn } from "@/lib/utils"
 
@@ -43,7 +44,8 @@ export function Editor({
 
   const extensions = useMemo(
     () => [
-      StarterKit.configure({ codeBlock: false }),
+      StarterKit.configure({ codeBlock: false, link: false }),
+      ExcalidrawLink,
       MermaidCodeBlock,
       TableKit.configure({ table: { resizable: false } }),
       Markdown.configure({
