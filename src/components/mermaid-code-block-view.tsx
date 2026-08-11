@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react"
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react"
 import type { ReactNodeViewProps } from "@tiptap/react"
+import { DiagramZoomDialog } from "@/components/diagram-zoom-dialog"
 
 let mermaidPromise: Promise<Awaited<ReturnType<typeof loadMermaid>>> | null =
   null
@@ -49,7 +50,7 @@ export function MermaidCodeBlockView({ node }: ReactNodeViewProps) {
         const currentRenderId = `${renderId}-${++mermaidRenderSequence}`
         const { svg: renderedSvg } = await mermaid.render(
           currentRenderId,
-          source,
+          source
         )
         if (cancelled) return
         setSvg(renderedSvg)
@@ -57,7 +58,9 @@ export function MermaidCodeBlockView({ node }: ReactNodeViewProps) {
       } catch (cause) {
         if (cancelled) return
         setSvg("")
-        setError(cause instanceof Error ? cause.message : "Unable to render diagram")
+        setError(
+          cause instanceof Error ? cause.message : "Unable to render diagram"
+        )
       }
     }, 200)
 
@@ -84,11 +87,10 @@ export function MermaidCodeBlockView({ node }: ReactNodeViewProps) {
     <NodeViewWrapper className="mermaid-code-block">
       <div className="mermaid-preview" contentEditable={false}>
         {svg ? (
-          <div
+          <DiagramZoomDialog
+            svg={svg}
+            label="Mermaid diagram"
             className="mermaid-preview__diagram"
-            role="img"
-            aria-label="Mermaid diagram"
-            dangerouslySetInnerHTML={{ __html: svg }}
           />
         ) : error ? (
           <div className="mermaid-preview__error" role="alert">

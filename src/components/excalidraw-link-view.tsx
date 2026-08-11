@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { MarkViewContent } from "@tiptap/react"
 import type { MarkViewProps } from "@tiptap/core"
+import { DiagramZoomDialog } from "@/components/diagram-zoom-dialog"
 
 function isExcalidrawLink(href: string) {
   try {
@@ -24,7 +25,7 @@ function getAssetUrl(href: string) {
 export function ExcalidrawLinkView({ mark }: MarkViewProps) {
   const href = String(mark.attrs.href ?? "")
   const previewable = isExcalidrawLink(href)
-  const [svg, setSvg] = useState<SVGSVGElement | null>(null)
+  const [svg, setSvg] = useState("")
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -61,12 +62,12 @@ export function ExcalidrawLinkView({ mark }: MarkViewProps) {
         if (controller.signal.aborted) return
         renderedSvg.setAttribute("role", "img")
         renderedSvg.setAttribute("aria-label", "Excalidraw diagram")
-        setSvg(renderedSvg)
+        setSvg(renderedSvg.outerHTML)
         setError("")
       })
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return
-        setSvg(null)
+        setSvg("")
         setError(
           cause instanceof Error ? cause.message : "Unable to render diagram"
         )
@@ -87,11 +88,10 @@ export function ExcalidrawLinkView({ mark }: MarkViewProps) {
       {previewable ? (
         <span className="excalidraw-preview" contentEditable={false}>
           {svg ? (
-            <span
+            <DiagramZoomDialog
+              svg={svg}
+              label="Excalidraw diagram"
               className="excalidraw-preview__diagram"
-              ref={(element) => {
-                if (element && !element.contains(svg)) element.appendChild(svg)
-              }}
             />
           ) : error ? (
             <span className="excalidraw-preview__error" role="alert">
